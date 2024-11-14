@@ -1,0 +1,17 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Tạo và kích hoạt môi trường ảo
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Cài đặt dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy code vào container
+COPY . .
+
+# Khởi chạy ứng dụng
+CMD ["python", "main.py"]
