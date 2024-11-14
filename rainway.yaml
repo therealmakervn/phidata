@@ -1,0 +1,22 @@
+version: '1.0'
+app:
+  name: phi-playground
+  type: container
+  
+  # Cấu hình container
+  container:
+    dockerfile: Dockerfile
+    ports:
+      - "7777:7777"
+    
+  # Biến môi trường
+  env:
+    - name: OPENAI_API_KEY
+      value: "your_openai_api_key"
+    - name: EXA_API_KEY  
+      value: "your_exa_api_key"
+
+  # Tài nguyên
+  resources:
+    cpu: 1
+    memory: 2Gi 

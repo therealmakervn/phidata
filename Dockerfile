@@ -13,5 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy code vào container
 COPY . .
 
+# Xác thực với phidata
+RUN phi auth
+
+# Expose port
+EXPOSE 7777
+
 # Khởi chạy ứng dụng
-CMD ["python", "main.py"]
+CMD ["python", "cookbook/playground/demo.py"]

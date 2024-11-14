@@ -121,4 +121,6 @@ youtube_agent = Agent(
 app = Playground(agents=[web_agent, finance_agent, youtube_agent, research_agent, image_agent]).get_app()
 
 if __name__ == "__main__":
-    serve_playground_app("demo:app", reload=True)
+    import os
+    port = int(os.getenv("PORT", 7777))
+    serve_playground_app("demo:app", port=port, reload=True)
