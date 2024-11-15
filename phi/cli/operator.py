@@ -18,121 +18,27 @@ def delete_phidata_conf() -> None:
     delete_from_fs(PHI_CLI_DIR)
 
 
-def authenticate_user() -> None:
-    """Authenticate the user using credentials from phidata.com
-    Steps:
-    1. Authenticate the user by opening the phidata sign-in url
-        and the web-app will post an auth token to a mini http server
-        running on the auth_server_port.
-    2. Using the auth_token, authenticate the CLI with the api and get the user.
-    3. After the user is authenticated update the PhiCliConfig.
-    4. Save the auth_token locally for future use.
-    """
-    from phi.api.user import authenticate_and_get_user
-    from phi.api.schemas.user import UserSchema
-    from phi.cli.credentials import save_auth_token
-    from phi.cli.auth_server import (
-        get_port_for_auth_server,
-        get_auth_token_from_web_flow,
-    )
-
-    print_heading("Authenticating with phidata.com ...")
-
-    auth_server_port = get_port_for_auth_server()
-    redirect_uri = "http%3A%2F%2Flocalhost%3A{}%2F".format(auth_server_port)
-    auth_url = "{}?source=cli&action=signin&redirecturi={}".format(phi_cli_settings.signin_url, redirect_uri)
-    print_info("\nYour browser will be opened to visit:\n{}".format(auth_url))
-    typer_launch(auth_url)
-    print_info("\nWaiting for a response from browser...\n")
-
-    auth_token = get_auth_token_from_web_flow(auth_server_port)
-    if auth_token is None:
-        logger.error("Could not authenticate, please try again")
-        return
-
-    phi_config: Optional[PhiCliConfig] = PhiCliConfig.from_saved_config()
-    existing_user: Optional[UserSchema] = phi_config.user if phi_config is not None else None
-    # Authenticate the user and claim any workspaces from anon user
-    try:
-        user: Optional[UserSchema] = authenticate_and_get_user(auth_token=auth_token, existing_user=existing_user)
-    except Exception as e:
-        logger.exception(e)
-        logger.error("Could not authenticate, please try again")
-        return
-
-    # Save the auth token if user is authenticated
-    if user is not None:
-        save_auth_token(auth_token)
-    else:
-        logger.error("Could not authenticate, please try again")
-        return
-
-    if phi_config is None:
-        phi_config = PhiCliConfig(user)
-        phi_config.save_config()
-    else:
-        phi_config.user = user
-
-    print_info("Welcome {}".format(user.email))
-
-
 def initialize_phi(reset: bool = False, login: bool = False) -> bool:
-    """Initialize phi on the users machine.
-
-    Steps:
-    1. Check if PHI_CLI_DIR exists, if not, create it. If reset == True, recreate PHI_CLI_DIR.
-    2. Authenticates the user if login == True.
-    3. If PhiCliConfig exists and auth is valid, return True.
-    """
-    from phi.utils.filesystem import delete_from_fs
-    from phi.api.user import create_anon_user
-
+    """Initialize phi on the users machine."""
+    
     print_heading("Welcome to phidata!")
     if reset:
         delete_phidata_conf()
 
     logger.debug("Initializing phidata")
 
-    # Check if ~/.phi exists, if it is not a dir - delete it and create the dir
-    if PHI_CLI_DIR.exists():
-        logger.debug(f"{PHI_CLI_DIR} exists")
-        if not PHI_CLI_DIR.is_dir():
-            try:
-                delete_from_fs(PHI_CLI_DIR)
-            except Exception as e:
-                logger.exception(e)
-                raise Exception(f"Something went wrong, please delete {PHI_CLI_DIR} and run again")
-            PHI_CLI_DIR.mkdir(parents=True, exist_ok=True)
-    else:
+    # Tạo thư mục .phi nếu chưa tồn tại
+    if not PHI_CLI_DIR.exists():
         PHI_CLI_DIR.mkdir(parents=True)
         logger.debug(f"Created {PHI_CLI_DIR}")
 
-    # Confirm PHI_CLI_DIR exists otherwise we should return
-    if PHI_CLI_DIR.exists():
-        logger.debug(f"Phidata config location: {PHI_CLI_DIR}")
-    else:
-        raise Exception("Something went wrong, please try again")
+    # Tự động tạo anonymous user
+    from phi.api.user import create_anon_user
+    anon_user = create_anon_user()
+    if anon_user is not None:
+        phi_config.user = anon_user
 
-    phi_config: Optional[PhiCliConfig] = PhiCliConfig.from_saved_config()
-    if phi_config is None:
-        logger.debug("Creating new PhiCliConfig")
-        phi_config = PhiCliConfig()
-        phi_config.save_config()
-
-    # Authenticate user
-    if login:
-        authenticate_user()
-    else:
-        anon_user = create_anon_user()
-        if anon_user is not None and phi_config is not None:
-            phi_config.user = anon_user
-
-    if phi_config is not None:
-        logger.debug("Phidata initialized")
-        return True
-    else:
-        logger.error("Something went wrong, please try again")
-        return False
+    return True
 
 
 def sign_in_using_cli() -> None:
