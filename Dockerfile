@@ -2,20 +2,22 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Tạo và kích hoạt môi trường ảo
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install system dependencies
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Cài đặt dependencies
+# Install Python packages
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install "fastapi[all]" uvicorn
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy code vào container
-COPY . .
+# Copy application
+COPY app.py .
 
 # Expose port
 EXPOSE 7777
 
-# Sửa command để chạy với uvicorn
-CMD ["uvicorn", "cookbook.playground.demo:app", "--host", "0.0.0.0", "--port", "7777"]
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:7777/health || exit 1
+
+# Run app
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7777", "--log-level", "debug"]

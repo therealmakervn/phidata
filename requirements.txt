@@ -1,14 +1,2 @@
-openai
-exa_py 
-duckduckgo-search
-yfinance
-pypdf
-sqlalchemy
-fastapi[standard]
-phidata
-youtube-transcript-api
-uvicorn
-python-dotenv
-fastapi>=0.68.0,<0.69.0
-pydantic>=1.8.0,<2.0.0
-uvicorn>=0.15.0,<0.16.0
+fastapi==0.104.1
+uvicorn==0.24.0
