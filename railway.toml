@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "uvicorn app:app --host 0.0.0.0 --port 7777 --log-level debug"
+startCommand = "/start.sh"
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 healthcheckInterval = 15
@@ -10,3 +10,4 @@ restartPolicyType = "on_failure"
 
 [env]
 PYTHONUNBUFFERED = "1"
+PYTHONPATH = "/app"
