@@ -3,8 +3,10 @@ builder = "dockerfile"
 
 [deploy]
 startCommand = "python cookbook/playground/demo.py"
-healthcheckPath = "/docs"
-healthcheckTimeout = 100
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+healthcheckInterval = 15
+healthcheckGracePeriod = 60
 restartPolicyType = "on_failure"
 
 [env]

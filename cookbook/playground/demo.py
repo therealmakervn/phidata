@@ -12,6 +12,8 @@ from phi.tools.duckduckgo import DuckDuckGo
 from phi.tools.exa import ExaTools
 from phi.tools.yfinance import YFinanceTools
 from phi.tools.youtube_tools import YouTubeTools
+from fastapi import FastAPI
+from phi.assistant import Assistant
 
 agent_storage_file: str = "tmp/agents.db"
 
@@ -118,7 +120,13 @@ youtube_agent = Agent(
     markdown=True,
 )
 
-app = Playground(agents=[web_agent, finance_agent, youtube_agent, research_agent, image_agent]).get_app()
+app = FastAPI()
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+# Các route khác của bạn...
 
 if __name__ == "__main__":
     import os
